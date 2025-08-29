@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase/client'
@@ -30,10 +31,16 @@ export function Navbar() {
   }
 
   return (
-    <nav className="w-full px-6 py-4 flex justify-between items-center border-b bg-white shadow-sm">
-      <Link href="/" className="text-xl font-semibold text-gray-800">
-        SoleSense
-      </Link>
+    <nav className="w-full py-4 flex justify-between items-center border-b bg-white shadow-sm">
+      <Link href="/" className="flex items-center gap-2">
+  <Image
+    src="/logo.png"
+    alt="SoleSense logo"
+    width={200}
+    height={100}
+    className="rounded-full"
+  />
+</Link>
 
       <div className="flex items-center gap-4">
         {user ? (
@@ -44,9 +51,11 @@ export function Navbar() {
             </Button>
           </>
         ) : (
-          <Link href="/login">
-            <Button>Login</Button>
-          </Link>
+          <>
+          <Link href="/login"><Button className="bg-pink-600  text-white">Login</Button></Link>
+          <Link href="/signup"><Button variant="ghost" className='text-pink-600' >Sign Up</Button></Link>
+          
+          </>
         )}
       </div>
     </nav>
