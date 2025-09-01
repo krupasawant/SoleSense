@@ -81,9 +81,9 @@ export default function ProductsPage() {
     return (
         <div className="p-6 space-y-4">
             <div className="flex justify-between items-center">
-                <h1 className="text-xl' font-semibold  text-[#e60076]">Product Inventory</h1>
-                <AddProduct onProductAdded={() => fetchProducts()} />
+                <h1 className="text-2xl font-semibold">Products</h1>
 
+                <AddProduct onProductAdded={() => fetchProducts()} />
             </div>
             <div className="overflow-hidden rounded-md border">
                 <Table>
