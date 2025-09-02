@@ -31,13 +31,13 @@ export function Navbar() {
   }
 
   return (
-    <nav className="w-full py-4 flex justify-between items-center border-b bg-white shadow-sm">
+    <nav className="sticky top-0 z-10 w-full h-20 py-4 flex justify-between items-center border-b bg-white shadow-sm">
       <Link href="/" className="flex items-center gap-2">
   <Image
     src="/logo.png"
     alt="SoleSense logo"
     width={200}
-    height={100}
+    height={80}
     className="rounded-full"
   />
 </Link>

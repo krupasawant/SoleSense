@@ -15,26 +15,51 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
+type ProductVariant = {
+    id: string;
+    product_id: string;
+    size: string; 
+    stock: number;
+};
+
 type Product = {
     id: string;
     name: string;
     price: number;
     category: string;
-    stock: number;
     is_active: boolean;
     image_url: string;
+    variants: ProductVariant[];
+    totalStock: number;
 };
-
-
 
 export default function ProductsPage() {
     const [products, setProducts] = useState<Product[]>([]);
 
-
     async function fetchProducts() {
-        const { data, error } = await supabase.from("products").select("*");
-        if (error) console.error("Fetch error:", error);
-        else setProducts(data);
+        const { data, error } = await supabase.from("products").select(`
+            id,
+            name,
+            price,
+            category,
+            is_active,
+            image_url,
+            product_variants(id, size, stock)
+        `);
+
+        if (error) return console.error("Fetch error:", error);
+        console.log(data);
+
+        setProducts(
+            (data || []).map(({ product_variants, ...rest }: any) => ({
+                ...rest,
+                variants: product_variants || [],
+                totalStock: (product_variants || []).reduce(
+                    (sum: number, v: any) => sum + v.stock,
+                    0
+                ),
+            }))
+        );
     }
 
     useEffect(() => {
@@ -42,39 +67,19 @@ export default function ProductsPage() {
     }, []);
 
     async function handleDelete(productId: string) {
-  const confirmed = confirm("Are you sure you want to delete this product?");
-  if (!confirmed) return;
+        const confirmed = confirm("Are you sure you want to delete this product?");
+        if (!confirmed) return;
 
-  const { error } = await supabase
-    .from("products")
-    .delete()
-    .eq("id", productId);
-
-  if (error) {
-    console.error("Delete error:", error.message);
-    alert("Failed to delete product.");
-  } else {
-    fetchProducts(); // refresh list after deletion
-  }
-}
-
-
-    async function updateStock(id: string, delta: number) {
-        const product = products.find((p) => p.id === id);
-        if (!product) return;
-
-        const newStock = product.stock + delta;
         const { error } = await supabase
             .from("products")
-            .update({ stock: newStock })
-            .eq("id", id);
+            .delete()
+            .eq("id", productId);
 
-        if (!error) {
-            setProducts((prev) =>
-                prev.map((p) =>
-                    p.id === id ? { ...p, stock: newStock } : p
-                )
-            );
+        if (error) {
+            console.error("Delete error:", error.message);
+            alert("Failed to delete product.");
+        } else {
+            fetchProducts(); // refresh list after deletion
         }
     }
 
@@ -82,9 +87,9 @@ export default function ProductsPage() {
         <div className="p-6 space-y-4">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-semibold">Products</h1>
-
-                <AddProduct onProductAdded={() => fetchProducts()} />
+                <AddProduct onProductAdded={fetchProducts} />
             </div>
+
             <div className="overflow-hidden rounded-md border">
                 <Table>
                     <TableHeader>
@@ -93,7 +98,8 @@ export default function ProductsPage() {
                             <TableHead>Name</TableHead>
                             <TableHead>Price</TableHead>
                             <TableHead>Category</TableHead>
-                            <TableHead>Stock</TableHead>
+                            <TableHead>Total Stock</TableHead>
+                            <TableHead>Sizes & Stock</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Actions</TableHead>
                         </TableRow>
@@ -111,14 +117,30 @@ export default function ProductsPage() {
                                 <TableCell>{product.name}</TableCell>
                                 <TableCell>₹{product.price.toFixed(2)}</TableCell>
                                 <TableCell>{product.category}</TableCell>
-                                <TableCell className="flex items-center gap-4">
-                                    <Button size="sm" className="bg-pink-600 text-white hover:bg-pink-400 p-3 m-2" onClick={() => updateStock(product.id, -1)}>-</Button>
-                                    <div className="m-3">{product.stock}</div>
-                                    <Button size="sm" className="bg-pink-600 text-white hover:bg-pink-400 p-3 m-2" onClick={() => updateStock(product.id, 1)}>+</Button>
+                                <TableCell>{product.totalStock}</TableCell>
+                                <TableCell>
+                                    {product.variants.length > 0 ? (
+                                        <div className="flex flex-wrap gap-2">
+                                            {product.variants.map((variant) => (
+                                                <span
+                                                    key={variant.id}
+                                                    className="px-2 py-1 bg-gray-100 rounded text-sm border"
+                                                >
+                                                    {variant.size}: {variant.stock}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <span className="text-gray-400">No variants</span>
+                                    )}
                                 </TableCell>
                                 <TableCell>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium text-white ${product.is_active ? 'bg-green-600' : 'bg-gray-400'}`}>
-                                        {product.is_active ? 'Active' : 'Inactive'}
+                                    <span
+                                        className={`px-2 py-1 rounded-full text-xs font-medium text-white ${
+                                            product.is_active ? "bg-green-600" : "bg-gray-400"
+                                        }`}
+                                    >
+                                        {product.is_active ? "Active" : "Inactive"}
                                     </span>
                                 </TableCell>
                                 <TableCell>
@@ -127,18 +149,17 @@ export default function ProductsPage() {
                                         <Button
                                             variant="ghost"
                                             className="text-red-500 hover:bg-red-100"
-                                            onClick={() => handleDelete(product.id)}>
-                                        Delete
-                                    </Button>
-                                </div>
-
-
-                            </TableCell>
-            </TableRow>
-          ))}
-                </TableBody>
-            </Table>
+                                            onClick={() => handleDelete(product.id)}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
         </div>
-    </div >
-  );
+    );
 }

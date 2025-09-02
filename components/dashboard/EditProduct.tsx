@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,11 +24,36 @@ export function EditProduct({
   onUpdated: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   const [form, setForm] = useState({ ...product });
+
+  const [variants, setVariants] = useState([
+    { size: "6", stock: "0" },
+    { size: "7", stock: "0" },
+    { size: "8", stock: "0" },
+  ]);
 
   useEffect(() => {
     if (open) {
       setForm({ ...product });
+
+      // Fetch variants for this product when dialog opens
+      (async () => {
+        const { data, error } = await supabase
+          .from("product_variants")
+          .select("size, stock")
+          .eq("product_id", product.id);
+
+        if (!error && data) {
+          // Map existing stock values to fixed sizes
+          const updated = ["6", "7", "8"].map((size) => {
+            const match = data.find((v) => v.size === size);
+            return { size, stock: match ? String(match.stock) : "0" };
+          });
+          setVariants(updated);
+        }
+      })();
     }
   }, [open, product]);
 
@@ -35,31 +61,62 @@ export function EditProduct({
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleVariantChange = (index: number, value: string) => {
+    const updated = [...variants];
+    updated[index].stock = value;
+    setVariants(updated);
+  };
+
   const handleSubmit = async () => {
-    const { error } = await supabase
+    setLoading(true);
+
+    // 1. Update product
+    const { error: productError } = await supabase
       .from("products")
       .update({
         name: form.name.trim(),
         price: parseFloat(form.price),
-        stock: parseInt(form.stock),
         category: form.category ? form.category.trim() : null,
         image_url: form.image_url ? form.image_url.trim() : null,
         is_active: form.is_active ?? true,
       })
       .eq("id", product.id);
 
-    if (!error) {
-      onUpdated();
-      setOpen(false);
-    } else {
-      console.error("Update error:", error.message || error);
+    if (productError) {
+      console.error("Product update error:", productError);
+      setLoading(false);
+      return;
     }
+
+    // 2. Upsert product_variants
+    const variantUpdates = variants.map((v) => ({
+      product_id: product.id,
+      size: v.size,
+      stock: parseInt(v.stock),
+    }));
+
+    const { error: variantError } = await supabase
+      .from("product_variants")
+      .upsert(variantUpdates, { onConflict: "product_id,size" });
+
+    if (variantError) {
+      console.error("Variant update error:", variantError);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(false);
+    onUpdated();
+    setOpen(false); // Close dialog
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="text-sm text-[#e60076] border-[#e60076] hover:bg-[#fce6ef]">
+        <Button
+          variant="outline"
+          className="text-sm text-[#e60076] border-[#e60076] hover:bg-[#fce6ef]"
+        >
           Edit
         </Button>
       </DialogTrigger>
@@ -77,10 +134,6 @@ export function EditProduct({
             <Input name="price" value={form.price} onChange={handleChange} />
           </div>
           <div>
-            <Label className="text-[#e60076]">Stock *</Label>
-            <Input name="stock" value={form.stock} onChange={handleChange} />
-          </div>
-          <div>
             <Label className="text-[#e60076]">Category</Label>
             <Input name="category" value={form.category || ""} onChange={handleChange} />
           </div>
@@ -88,6 +141,23 @@ export function EditProduct({
             <Label className="text-[#e60076]">Image URL</Label>
             <Input name="image_url" value={form.image_url || ""} onChange={handleChange} />
           </div>
+
+          <div>
+            <Label className="text-[#e60076]">Stock by Size</Label>
+            <div className="space-y-2 mt-2">
+              {variants.map((v, index) => (
+                <div key={v.size} className="flex items-center gap-2">
+                  <span className="w-8 font-semibold">{v.size}</span>
+                  <Input
+                    type="number"
+                    value={v.stock}
+                    onChange={(e) => handleVariantChange(index, e.target.value)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="flex items-center gap-2">
             <Checkbox
               checked={form.is_active}
@@ -99,8 +169,11 @@ export function EditProduct({
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleSubmit} className="bg-[#fb8f4b] text-white">
-            Update Product
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
+          <Button onClick={handleSubmit} disabled={loading} className="bg-[#fb8f4b] text-white">
+            {loading ? "Updating..." : "Update Product"}
           </Button>
         </DialogFooter>
       </DialogContent>
