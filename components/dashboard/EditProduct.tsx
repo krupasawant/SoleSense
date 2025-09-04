@@ -19,9 +19,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 export function EditProduct({
   product,
   onUpdated,
+  isAdmin,
 }: {
   product: any;
   onUpdated: () => void;
+  isAdmin: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -68,6 +70,10 @@ export function EditProduct({
   };
 
   const handleSubmit = async () => {
+    if (!isAdmin) {
+  alert("Only admin users can add products. This is just a demo.");
+  return;
+}
     setLoading(true);
 
     // 1. Update product

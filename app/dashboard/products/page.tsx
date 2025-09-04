@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AddProduct } from "@/components/dashboard/AddProduct";
 import { EditProduct } from "@/components/dashboard/EditProduct";
 
+
 import {
     Table,
     TableBody,
@@ -18,7 +19,7 @@ import {
 type ProductVariant = {
     id: string;
     product_id: string;
-    size: string; 
+    size: string;
     stock: number;
 };
 
@@ -35,6 +36,9 @@ type Product = {
 
 export default function ProductsPage() {
     const [products, setProducts] = useState<Product[]>([]);
+    const [isAdmin, setIsAdmin] = useState(false);
+
+
 
     async function fetchProducts() {
         const { data, error } = await supabase.from("products").select(`
@@ -66,7 +70,13 @@ export default function ProductsPage() {
         fetchProducts();
     }, []);
 
+
+
     async function handleDelete(productId: string) {
+        if (!isAdmin) {
+            alert("This is a demo. Only admin users can delete products.");
+            return;
+        }
         const confirmed = confirm("Are you sure you want to delete this product?");
         if (!confirmed) return;
 
@@ -87,7 +97,7 @@ export default function ProductsPage() {
         <div className="p-6 space-y-4">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-semibold">Products</h1>
-                <AddProduct onProductAdded={fetchProducts} />
+                <AddProduct onProductAdded={fetchProducts}  isAdmin={isAdmin}/>
             </div>
 
             <div className="overflow-hidden rounded-md border">
@@ -136,16 +146,15 @@ export default function ProductsPage() {
                                 </TableCell>
                                 <TableCell>
                                     <span
-                                        className={`px-2 py-1 rounded-full text-xs font-medium text-white ${
-                                            product.is_active ? "bg-green-600" : "bg-gray-400"
-                                        }`}
+                                        className={`px-2 py-1 rounded-full text-xs font-medium text-white ${product.is_active ? "bg-green-600" : "bg-gray-400"
+                                            }`}
                                     >
                                         {product.is_active ? "Active" : "Inactive"}
                                     </span>
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex gap-2">
-                                        <EditProduct product={product} onUpdated={fetchProducts} />
+                                        <EditProduct product={product} onUpdated={fetchProducts}  isAdmin={isAdmin} />
                                         <Button
                                             variant="ghost"
                                             className="text-red-500 hover:bg-red-100"

@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export function AddProduct({ onProductAdded }: { onProductAdded: () => void }) {
+export function AddProduct({ onProductAdded, isAdmin, }: { onProductAdded: () => void, isAdmin: boolean; }) {
     const [form, setForm] = useState({
         name: "",
         description: "",
@@ -46,6 +46,10 @@ export function AddProduct({ onProductAdded }: { onProductAdded: () => void }) {
     };
 
     const handleSubmit = async () => {
+        if (!isAdmin) {
+            alert("Only admin users can add products. This is just a demo.");
+            return;
+        }
         setLoading(true);
 
         const variantsToInsert = variants

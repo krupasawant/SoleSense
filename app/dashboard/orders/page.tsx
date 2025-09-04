@@ -77,7 +77,6 @@ export default function OrdersPage() {
     )
       `)
       .order("created_at", { ascending: false });
- console.log(data);
     if (error) {
       console.error("Failed to fetch orders:", error.message);
     } else {
