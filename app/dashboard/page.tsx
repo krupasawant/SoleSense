@@ -132,7 +132,7 @@ export default function DashboardCharts() {
   }, []);
 
   return (
-    <div className="flex flex-col md:ml-48 p-4">
+    <div className="flex flex-col p-4">
       {/* Stock per Product */}
       <Card>
         <CardHeader><CardTitle>Stock per Product</CardTitle></CardHeader>
@@ -140,7 +140,7 @@ export default function DashboardCharts() {
           <ResponsiveContainer width="100%" height={Math.min(stockData.length * 45, 400)}>
             <BarChart data={stockData} layout="vertical" margin={{ top: 20, right: 30, left: 80, bottom: 20 }}>
               <XAxis type="number" />
-              <YAxis type="category" dataKey="product_name" tick={{ fontSize: 12 }} width={Math.min(170, window.innerWidth / 3)} />
+              <YAxis type="category" dataKey="product_name" tick={{ fontSize: 12 }} width={170} />
               <Tooltip />
               <Bar dataKey="total_stock" fill="#e60076" />
             </BarChart>
@@ -189,7 +189,7 @@ export default function DashboardCharts() {
             <ResponsiveContainer width="100%" height={Math.min(topProducts.length * 45, 400)}>
               <BarChart data={topProducts} layout="vertical" margin={{ top: 20, right: 30, left: 80, bottom: 20 }}>
                 <XAxis type="number" />
-                <YAxis type="category" dataKey="product_name" tickFormatter={shortenName} width={Math.min(150, window.innerWidth / 3)} />
+                <YAxis type="category" dataKey="product_name" tickFormatter={shortenName} width={150} />
                 <Tooltip formatter={(value: number, name, props) => [value, props.payload.product_name]} />
                 <Bar dataKey="quantity" fill="#e60076" />
               </BarChart>
