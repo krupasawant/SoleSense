@@ -11,7 +11,7 @@ import { User } from '@supabase/supabase-js'
 
 export function Navbar() {
   const router = useRouter()
-  const [user, setUser] = useState<User | any>(null)
+  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {

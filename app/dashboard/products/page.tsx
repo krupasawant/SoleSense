@@ -69,15 +69,26 @@ export default function ProductsPage() {
 
         if (error) return console.error("Fetch error:", error);
 
-        setProducts(
-            (data as ProductWithVariants[] || []).map(({ product_variants, ...rest }: any) => ({
+         setProducts(
+            (data as ProductWithVariants[] || []).map(({ product_variants, ...rest }) => ({
                 ...rest,
-                variants: product_variants || [],
+                price: rest.price ?? 0,
+                category: rest.category ?? '',
+                name: rest.name ?? '',
+                image_url: rest.image_url ?? '',
+                is_active: rest.is_active ?? false,
+                variants: (product_variants || []).map(v => ({
+                    id: v.id,
+                    product_id: rest.id,
+                    size: v.size ?? '',
+                    stock: v.stock ?? 0
+                })),
+                
                 totalStock: (product_variants || []).reduce(
-                    (sum: number, v: any) => sum + v.stock,
+                    (sum: number, v) => sum + (v.stock ?? 0),
                     0
                 ),
-            }))
+            })) as Product[]
         );
     }
 
