@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
-import type { Database } from "@/types/supabase";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   BarChart,
@@ -23,6 +22,22 @@ type CategoryData = { category: string; count: number };
 type StatusData = { status: string; count: number };
 type TopProductData = { product_name: string; quantity: number };
 
+// --- Query-specific types to deal with nested joins ---
+type StockQueryData = {
+  stock: number;
+  products: { name: string | null } | null;
+};
+type TopProductsQueryData = {
+  quantity: number;
+  product_variants: { products: { name: string | null } | null } | null;
+};
+type CategoriesQueryData = {
+  category: string | null;
+};
+type OrderStatusQueryData = {
+  status: string;
+};
+
 // --- Colors & helpers ---
 const PINK_SHADES = ["#e60076", "#ff2d95", "#ff66b3", "#ff99c2", "#ffcce0", "#ffe6f0"];
 const shortenName = (name: string) => (name.length > 20 ? name.slice(0, 17) + "…" : name);
@@ -39,11 +54,16 @@ const fetchStock = async (): Promise<StockData[]> => {
     return [];
   }
 
+console.log(data);
+const typedData = data as StockQueryData[] | null;
+
   const stockMap: Record<string, number> = {};
-  data?.forEach((v) => {
-    const name = v.products?.name ?? "Unknown";
-    stockMap[name] = (stockMap[name] || 0) + v.stock;
-  });
+  if (typedData) {
+    typedData.forEach((v) => {
+      const name = v.products?.name ?? "Unknown";
+      stockMap[name] = (stockMap[name] || 0) + v.stock;
+    });
+  }
 
   return Object.entries(stockMap).map(([product_name, total_stock]) => ({ product_name, total_stock }));
 };
@@ -58,11 +78,15 @@ const fetchCategories = async (): Promise<CategoryData[]> => {
     return [];
   }
 
+   const typedData = data as CategoriesQueryData[] | null;
+
   const categoryMap: Record<string, number> = {};
-  data?.forEach((p) => {
-    const category = p.category ?? "Uncategorized";
-    categoryMap[category] = (categoryMap[category] || 0) + 1;
-  });
+  if (typedData) {
+    typedData.forEach((p) => {
+      const category = p.category ?? "Uncategorized";
+      categoryMap[category] = (categoryMap[category] || 0) + 1;
+    });
+  }
 
   return Object.entries(categoryMap).map(([category, count]) => ({ category, count }));
 };
@@ -77,10 +101,14 @@ const fetchOrderStatus = async (): Promise<StatusData[]> => {
     return [];
   }
 
+const typedData = data as OrderStatusQueryData[] | null;
+
   const statusMap: Record<string, number> = {};
-  data?.forEach((o) => {
-    statusMap[o.status] = (statusMap[o.status] || 0) + 1;
-  });
+  if (typedData) {
+    typedData.forEach((o) => {
+      statusMap[o.status] = (statusMap[o.status] || 0) + 1;
+    });
+  }
 
   return Object.entries(statusMap).map(([status, count]) => ({ status, count }));
 };
@@ -95,11 +123,15 @@ const fetchTopProducts = async (): Promise<TopProductData[]> => {
     return [];
   }
 
+  const typedData = data as TopProductsQueryData[] | null;
+
   const productMap: Record<string, number> = {};
-  data?.forEach((item) => {
-    const name = item.product_variants?.products?.name ?? "Unknown";
-    productMap[name] = (productMap[name] || 0) + item.quantity;
-  });
+  if (typedData) {
+    typedData.forEach((item) => {
+      const name = item.product_variants?.products?.name ?? "Unknown";
+      productMap[name] = (productMap[name] || 0) + item.quantity;
+    });
+  }
 
   return Object.entries(productMap)
     .map(([product_name, quantity]) => ({ product_name, quantity }))

@@ -16,89 +16,146 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 
+// --- Types ---
+import type { Database } from "@/types/supabase";
+
+export type ProductVariant = {
+  id: string;
+  product_id: string;
+  size: string;
+  stock: number;
+};
+
+export type Product = {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  is_active: boolean;
+  image_url: string;
+  variants: ProductVariant[];
+  totalStock: number;
+};
+
+type ProductVariantFromDB = {
+  id: string;
+  size: string | null;
+  stock: number | null;
+};
+
+// Define the correct types for the update payload
+type ProductsUpdate = Database['public']['Tables']['products']['Update'];
+type ProductVariantsUpdate = Database['public']['Tables']['product_variants']['Update'];
+
+// --- Component ---
 export function EditProduct({
   product,
   onUpdated,
   isAdmin,
 }: {
-  product: any;
+  product: Product;
   onUpdated: () => void;
   isAdmin: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const [form, setForm] = useState({ ...product });
-
-  const [variants, setVariants] = useState([
-    { size: "6", stock: "0" },
-    { size: "7", stock: "0" },
-    { size: "8", stock: "0" },
-  ]);
+  const [form, setForm] = useState(product);
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
     if (open) {
-      setForm({ ...product });
+      setForm(product);
+      setMessage(null);
 
-      // Fetch variants for this product when dialog opens
       (async () => {
         const { data, error } = await supabase
           .from("product_variants")
-          .select("size, stock")
+          .select("id, size, stock")
           .eq("product_id", product.id);
 
         if (!error && data) {
-          // Map existing stock values to fixed sizes
-          const updated = ["6", "7", "8"].map((size) => {
-            const match = data.find((v) => v.size === size);
-            return { size, stock: match ? String(match.stock) : "0" };
-          });
-          setVariants(updated);
+          const typedData = data as ProductVariantFromDB[] | null;
+
+          if (typedData) {
+            const updated = ["6", "7", "8"].map((size) => {
+              const match = typedData.find((v) => v.size === size);
+              return {
+                product_id: product.id,
+                id: match?.id ?? '',
+                size,
+                stock: match?.stock ?? 0
+              };
+            });
+            setVariants(updated);
+          }
         }
       })();
     }
   }, [open, product]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm((prevForm) => ({ ...prevForm, [name]: value }));
   };
 
   const handleVariantChange = (index: number, value: string) => {
-    const updated = [...variants];
-    updated[index].stock = value;
+    const parsedValue = parseInt(value, 10);
+    const newStock = isNaN(parsedValue) ? 0 : parsedValue;
+
+    const updated = variants.map((v, i) =>
+      i === index ? { ...v, stock: newStock } : v
+    );
     setVariants(updated);
   };
 
-  const handleSubmit = async () => {
+// Define a new type for the upsert payload
+// It uses the base `ProductVariantsUpdate` but forces product_id and size to be required
+type VariantUpsertPayload = Omit<ProductVariantsUpdate, 'product_id' | 'size'> & {
+    product_id: string;
+    size: string;
+};
+
+
+const handleSubmit = async () => {
     if (!isAdmin) {
-  alert("Only admin users can add products. This is just a demo.");
-  return;
-}
+      setMessage({ text: "Only admin users can edit products. This is just a demo.", type: "error" });
+      return;
+    }
+
+    const price = Number(form.price);
+    if (isNaN(price)) {
+      setMessage({ text: "Price must be a valid number.", type: "error" });
+      return;
+    }
+
     setLoading(true);
 
-    // 1. Update product
+    const updatePayload: ProductsUpdate = {
+      name: form.name.trim(),
+      price: price,
+      category: form.category ? form.category.trim() : null,
+      image_url: form.image_url ? form.image_url.trim() : null,
+      is_active: form.is_active,
+    };
+
     const { error: productError } = await supabase
       .from("products")
-      .update({
-        name: form.name.trim(),
-        price: parseFloat(form.price),
-        category: form.category ? form.category.trim() : null,
-        image_url: form.image_url ? form.image_url.trim() : null,
-        is_active: form.is_active ?? true,
-      })
+      .update(updatePayload)
       .eq("id", product.id);
 
     if (productError) {
       console.error("Product update error:", productError);
+      setMessage({ text: "Failed to update product.", type: "error" });
       setLoading(false);
       return;
     }
 
-    // 2. Upsert product_variants
-    const variantUpdates = variants.map((v) => ({
-      product_id: product.id,
+    // Map to the new, stricter type to satisfy upsert
+    const variantUpdates: VariantUpsertPayload[] = variants.map((v) => ({
+      product_id: v.product_id,
       size: v.size,
-      stock: parseInt(v.stock),
+      stock: v.stock,
     }));
 
     const { error: variantError } = await supabase
@@ -107,15 +164,16 @@ export function EditProduct({
 
     if (variantError) {
       console.error("Variant update error:", variantError);
+      setMessage({ text: "Failed to update product variants.", type: "error" });
       setLoading(false);
       return;
     }
 
     setLoading(false);
+    setMessage({ text: "Product updated successfully!", type: "success" });
     onUpdated();
-    setOpen(false); // Close dialog
+    setOpen(false);
   };
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -131,13 +189,23 @@ export function EditProduct({
           <DialogTitle>Edit Product</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
+          {message && (
+            <div
+              className={`p-2 rounded text-sm ${
+                message.type === "error" ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"
+              }`}
+            >
+              {message.text}
+            </div>
+          )}
+
           <div>
             <Label className="text-[#e60076]">Name *</Label>
             <Input name="name" value={form.name} onChange={handleChange} />
           </div>
           <div>
             <Label className="text-[#e60076]">Price *</Label>
-            <Input name="price" value={form.price} onChange={handleChange} />
+            <Input name="price" type="number" value={form.price} onChange={handleChange} />
           </div>
           <div>
             <Label className="text-[#e60076]">Category</Label>
