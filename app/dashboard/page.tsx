@@ -54,7 +54,7 @@ const fetchStock = async (): Promise<StockData[]> => {
     return [];
   }
 
-console.log(data);
+
 const typedData = data as StockQueryData[] | null;
 
   const stockMap: Record<string, number> = {};

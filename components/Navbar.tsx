@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 
+import { User } from '@supabase/supabase-js'
+
 export function Navbar() {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | any>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {

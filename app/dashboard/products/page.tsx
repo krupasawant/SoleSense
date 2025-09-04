@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { AddProduct } from "@/components/dashboard/AddProduct";
 import { EditProduct } from "@/components/dashboard/EditProduct";
+import Image from "next/image"; 
 
 
 import {
@@ -34,9 +35,24 @@ type Product = {
     totalStock: number;
 };
 
+type ProductWithVariants = {
+    id: string;
+    name: string | null;
+    price: number | null;
+    category: string | null;
+    is_active: boolean | null;
+    image_url: string | null;
+    product_variants: {
+        id: string;
+        size: string | null;
+        stock: number | null;
+    }[];
+};
+
+
 export default function ProductsPage() {
     const [products, setProducts] = useState<Product[]>([]);
-    const [isAdmin, setIsAdmin] = useState(false);
+    const [isAdmin] = useState(false);
 
 
 
@@ -52,10 +68,9 @@ export default function ProductsPage() {
         `);
 
         if (error) return console.error("Fetch error:", error);
-        console.log(data);
 
         setProducts(
-            (data || []).map(({ product_variants, ...rest }: any) => ({
+            (data as ProductWithVariants[] || []).map(({ product_variants, ...rest }: any) => ({
                 ...rest,
                 variants: product_variants || [],
                 totalStock: (product_variants || []).reduce(
@@ -118,7 +133,7 @@ export default function ProductsPage() {
                         {products.map((product) => (
                             <TableRow key={product.id}>
                                 <TableCell>
-                                    <img
+                                    <Image
                                         src={product.image_url}
                                         alt={product.name}
                                         className="w-12 h-12 object-cover rounded"
