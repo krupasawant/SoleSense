@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+### SoleSense
 
-## Getting Started
+## Admin Dashboard for E-commerce Shoe Store
 
-First, run the development server:
+⚠️ Note: The live demo is currently experiencing errors. For now, please run the project locally to explore all features.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Live Demo: https://solesense.vercel.app
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Overview
+SoleSense is a responsive admin dashboard built to manage an e-commerce shoe store.
+It allows admins to manage products, view orders, and track stock while providing users with read-only access to product information.
+The project demonstrates full-stack skills, including database management, authentication, analytics, and payment integration.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tech Stack
+- Frontend: Next.js, Tailwind CSS, shadcn/ui
+- Backend & Database: Supabase (Auth, Database, Storage)
+- Charts & Analytics: Recharts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Features
+- Admin authentication with role-based access
+- CRUD operations for products (admin only)
+- Orders dashboard with stock and sales analytics
+- Responsive design for desktop & mobile
+- Integration with Supabase
 
-## Learn More
+## Screenshots
+<p float="left">
+  <img src="./screenshots/graph.png" width="200" />
+  <img src="./screenshots/products.png" width="200" />
+  <img src="./screenshots/orders.png" width="200" />
+  <img src="./screenshots/editprod.png" width="200" />
+</p>
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Setup / Installation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Clone the repository:
 
-## Deploy on Vercel
+   git clone https://github.com/yourusername/solesense.git
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   cd solesense
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. Install dependencies:
+
+   npm install
+
+4. Create .env.local with your Supabase keys:
+
+   NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-supabase-anon-key>
+
+5. Run the development server:
+   npm run dev
+
+   Open http://localhost:3000
+ to view the project locally.
+
+## Future Improvements
+
+- Real-time stock updates
+- Advanced analytics filters
+- User profile management
+- Enhanced mobile UX
