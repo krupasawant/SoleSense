@@ -4,7 +4,7 @@
 
 Technical Blog : https://shorturl.at/iewq5
 
-Live Demo: https://solesense.vercel.app
+Live Demo: https://sole-sense.vercel.app/
 
 ## Overview
 SoleSense is a responsive admin dashboard built to manage an e-commerce shoe store.
