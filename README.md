@@ -2,8 +2,7 @@
 
 ## Admin Dashboard for E-commerce Shoe Store
 
-⚠️ Note: The live demo is currently experiencing errors. For now, please run the project locally to explore all features.
-
+Technical Blog : https://shorturl.at/iewq5
 Live Demo: https://solesense.vercel.app
 
 ## Overview
