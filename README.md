@@ -1,15 +1,11 @@
-### SoleSense
-
-## Admin Dashboard for E-commerce Shoe Store
+## SoleSense
+SoleSense is a responsive admin dashboard built to manage an e-commerce shoe store.
+It allows admins to manage products, view orders, and track stock while providing users with read-only access to product information.
+The project demonstrates full-stack skills, including database management, authentication, analytics, and payment integration.
 
 Technical Blog : https://shorturl.at/iewq5
 
 Live Demo: https://sole-sense.vercel.app/
-
-## Overview
-SoleSense is a responsive admin dashboard built to manage an e-commerce shoe store.
-It allows admins to manage products, view orders, and track stock while providing users with read-only access to product information.
-The project demonstrates full-stack skills, including database management, authentication, analytics, and payment integration.
 
 ## Tech Stack
 - Frontend: Next.js, Tailwind CSS, shadcn/ui
